@@ -1,0 +1,27 @@
+version: '3.6'
+
+services:
+  db:
+    image: postgres:14.5
+    restart: always
+    volumes:
+      - db:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/create_tables.sql
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USERNAME} 
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - ${DB_PORT}
+
+  pgadmin:
+    image: chorss/docker-pgadmin4
+    ports:
+      - ${PG_PORT}
+
+volumes:
+  db:
+    driver: local
+ #app:
+    #driver: local
+  pgadmin-data:
