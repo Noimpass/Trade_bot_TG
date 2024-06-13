@@ -25,6 +25,7 @@ class Settings(BaseSettings):
 
     TEST_SHOP_ID: str
     TEST_SHOP_ARTICLE_ID: str
+    TEST_SHOP_TOKEN: str
 
 Bot_on = True  # The bot is run by default.
 

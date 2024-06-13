@@ -27,6 +27,27 @@ kb = [
 market_kb = InlineKeyboardMarkup(inline_keyboard=kb)
 
 kb = [
+    [InlineKeyboardButton(text="Купить", callback_data="pay")],
+    [InlineKeyboardButton(text="Продать", callback_data="sell")]
+]
+
+pay_kb = InlineKeyboardMarkup(inline_keyboard=kb)
+
+kb = [
+    [InlineKeyboardButton(text="Купить", callback_data="yes")],
+    [InlineKeyboardButton(text="Отмена", callback_data="отмена")]
+]
+
+buy_kb = InlineKeyboardMarkup(inline_keyboard=kb)
+
+kb = [
+    [InlineKeyboardButton(text="Подтвердить", callback_data="confirmation")],
+    [InlineKeyboardButton(text="Отмена", callback_data="отмена")]
+]
+
+confirmation_kb = InlineKeyboardMarkup(inline_keyboard=kb)
+
+kb = [
     [InlineKeyboardButton(text="Как узнать свой Trade link", url="https://steamcommunity.com/id/me/tradeoffers/privacy#trade_offer_access_url")],
     [InlineKeyboardButton(text="Отмена", callback_data="отмена")]
 ]

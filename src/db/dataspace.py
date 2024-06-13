@@ -59,17 +59,47 @@ class ManageUsers:
             session.commit()
         except Exception:
             logging.error("Can't change trade link", Exception)
-    
+
+    def change_steam_link(self, user_id: int, steam_link: str):
+        try:
+            user = session.query(Users).filter(Users.user_id == user_id).one()
+            user.steam_link = steam_link
+            session.commit()
+        except Exception:
+            logging.error("Can't change steam link", Exception)
+
+    def change_steam_name(self, user_id: int, steam_name: str):
+        try:
+            user = session.query(Users).filter(Users.user_id == user_id).one()
+            user.steam_name = steam_name
+            session.commit()
+        except Exception:
+            logging.error("Can't change steam name", Exception)
+
     def change_balance(self, user_id: int, balance: int):
         try:
             user = session.query(Users).filter(Users.user_id == user_id).one()
-            user.balance = balance
+            user.balance = user.balance + balance
             session.commit()
         except Exception:
             logging.error("Can't change balance", Exception)
 
+    def change_deals(self, user_id: int, deals: int):
+        try:
+            user = session.query(Users).filter(Users.user_id == user_id).one()
+            user.deals = user.deals + deals
+            session.commit()
+        except Exception:
+            logging.error("Can't change deals", Exception)
     
-
+    def change_bonus(self, user_id: int, bonus: int):
+        try:
+            user = session.query(Users).filter(Users.user_id == user_id).one()
+            user.bonus = user.bonus + bonus
+            session.commit()
+        except Exception:
+            logging.error("Can't change bonus", Exception)
+    
 class ManageProducts:
     def get_products(self):
         try:
@@ -78,26 +108,56 @@ class ManageProducts:
         except NoResultFound:
             return None
         
+    def get_product_by_id(self, product_id: int):
+        try:
+            product = session.query(Product).filter(Product.id == product_id).one()
+            return product
+        except NoResultFound:
+            return None
+        
+    def get_product_by_name(self, product_name: str):
+        try:
+            product = session.query(Product).filter(Product.name == product_name).one()
+            return product
+        except NoResultFound:
+            return None
+        
     def add_product(self, product:Product):
         try:
             session.add(product)
             session.commit()
-        except:
-            logging.error("Can't add product", product)
+        except Exception as e:
+            logging.error("Can't add product", e)
 
-    def delete_product(self, product_id: int):
+    def delete_product(self, product_name: str):
         try:
-            product = session.query(Product).filter(Product.id == product_id).one()
+            product = session.query(Product).filter(Product.name == product_name).one()
             session.delete(product)
             session.commit()
-        except:
-            logging.error("Can't delete product", product)
+        except Exception as e:
+            logging.error("Can't delete product", e)
 
-    def change_quantity(self, product_id: int, quantity: int):
+    def change_price(self, product_name: str, price: int):
         try:
-            product = session.query(Product).filter(Product.id == product_id).one()
+            product = session.query(Product).filter(Product.name == product_name).one()
+            product.price = price
+            session.commit()
+        except Exception as e:
+            logging.error("Can't change price", e)
+
+    def change_quantity(self, product_name: str, quantity: int):
+        try:
+            product = session.query(Product).filter(Product.id == product_name).one()
             product.quantity = quantity
             session.commit()
-        except:
-            logging.error("Can't change quantity", product)
+        except Exception as e:
+            logging.error("Can't change quantity", e)
+
+    def sell_product(self, product_name: str, quantity: int):
+        try:
+            product = session.query(Product).filter(Product.name == product_name).one()
+            product.quantity = product.quantity - quantity
+            session.commit()
+        except Exception as e:
+            logging.error("Can't sell product", e)
         
