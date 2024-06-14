@@ -11,6 +11,11 @@ product = Product(
     link="await"
 )
 
+service = Service(
+    name="test",
+    price=100,
+)
+
 User = Users(
     username="test",
     user_id=1,
@@ -27,15 +32,24 @@ Admin = Admins(
     user_id=1
 )
 
-ManageProducts().add_product(product)
+#ManageProducts().add_product(product)
 #ManageUsers().add_user(User)
 #ManageAdmins().add_admin(Admin)
+ManageServices().add_service(service)
 
 admins =ManageAdmins().get_admins()
 products = ManageProducts().get_products()
 users = ManageUsers().get_users()
+services = ManageServices().get_services()
 
-print(524366561 in [admin.user_id for admin in admins])
+for admin in admins:
+    print(admin.username)
 
+for user in users:
+    print(user.username)
+
+for service in services:
+    print(service.name)
+    
 for product in products:
     print(product.name)

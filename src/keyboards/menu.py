@@ -20,11 +20,20 @@ kb = [
 profile_kb = InlineKeyboardMarkup(inline_keyboard=kb)
 
 kb = [
-        [InlineKeyboardButton(text="Team Fortress 2", callback_data="TF2")],
-        [InlineKeyboardButton(text="CS2", callback_data="CS2")]
+        [InlineKeyboardButton(text="Услуги", callback_data="service")],
+        [InlineKeyboardButton(text="Товары", callback_data="market")],
+        [InlineKeyboardButton(text="Назад", callback_data="отмена")]
 ]
 
 market_kb = InlineKeyboardMarkup(inline_keyboard=kb)
+
+kb = [
+        [InlineKeyboardButton(text="Team Fortress 2", callback_data="TF2")],
+        [InlineKeyboardButton(text="CS2", callback_data="CS2")],
+        [InlineKeyboardButton(text="Назад", callback_data="отмена")]
+]
+
+product_kb = InlineKeyboardMarkup(inline_keyboard=kb)
 
 kb = [
     [InlineKeyboardButton(text="Купить", callback_data="pay")],
@@ -39,6 +48,13 @@ kb = [
 ]
 
 buy_kb = InlineKeyboardMarkup(inline_keyboard=kb)
+
+kb = [
+    [InlineKeyboardButton(text="Купить", callback_data="yes_service")],
+    [InlineKeyboardButton(text="Отмена", callback_data="отмена")]
+]
+
+service_pay_kb = InlineKeyboardMarkup(inline_keyboard=kb)
 
 kb = [
     [InlineKeyboardButton(text="Подтвердить", callback_data="confirmation")],

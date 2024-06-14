@@ -2,13 +2,13 @@ import logging
 
 from dispatcher import dp, bot
 from aiogram import types, html, F
-from aiogram.types import Message, CallbackQuery, LinkPreviewOptions, LabeledPrice
+from aiogram.types import Message, CallbackQuery, LinkPreviewOptions, LabeledPrice, ReplyKeyboardRemove
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram.filters.command import Command
 from aiogram.fsm.context import FSMContext
 from keyboards.menu import *
 from keyboards.state import *
-from db.dataspace import ManageUsers, ManageProducts, ManageAdmins
+from db.dataspace import *
 from db.models import Users
 from request.request import *
 from config import settings
@@ -19,6 +19,10 @@ options_1 = LinkPreviewOptions(is_disabled=True)
 market_TF2 = []
 
 market_CS2 = []
+
+services_data = []
+
+msg = None
 
 @dp.message(Command("start"))
 async def command_start_handler(message: Message) -> None:
@@ -66,9 +70,6 @@ async def link_changed(message: Message, state: FSMContext) -> None:
 @dp.callback_query(F.data == "отмена")
 async def cancel_handler(callback:CallbackQuery, state: FSMContext):
     current_state = await state.get_state()
-    if current_state is None:
-        return
-    
     logging.info(f"Cancelling state {current_state}")
     user_data = ManageUsers().get_user_by_id(callback.from_user.id)
     await state.clear()
@@ -130,36 +131,68 @@ async def send_bonus_info(callback: CallbackQuery) -> None:
 
 @dp.message(F.text.lower() == "маркет")
 async def send_market_info(message: Message) -> None:
+    msg = message.message_id
     user_data = ManageUsers().get_user_by_id(message.from_user.id)
     if user_data.trade_link == None:
         await message.answer(f"Сначала заполните профиль")
     else:
         await message.answer(f"Выберите категорию", reply_markup=market_kb)
 
-
 @dp.message(F.text.lower() == "подробнее о сервисе")
 async def send_about_info(message: Message) -> None:
-    await message.answer(
-f"Приветствую, геймеры!
-Ищете способ пополнить Steam в России?
-Наш телеграмм-бот - ваш идеальный помощник!
-                                                 
-Как начать:
-Введите свой Trade link в профиле бота. 
-Пополните кошелёк в боте
-Выберите нужный товаров, который вас интересует.
-Оформите заказ и подтвердите покупку.
-Согласитесь на Trade offer в стиме с выбранными товарамии продайте их на торговой площадке Steam.  
-    
-Остались вопросы? Напишите @Noimf")
+    await message.answer("Приветствую, геймеры!\nИщете способ пополнить Steam в России?\nНаш телеграмм-бот - ваш идеальный помощник!\n\nКак начать:\nВведите свой Trade link в профиле бота.\n Пополните кошелёк в боте\nВыберите нужный товаров, который вас интересует.\nОформите заказ и подтвердите покупку.\nСогласитесь на Trade offer в стиме с выбранными товарамии продайте их на торговой площадке Steam.\n\n Также в \n\n  Остались вопросы? Напишите @Noimf")
 
 @dp.message(F.text.lower() == "поддержка")
 async def send_support_info(message: Message) -> None:
     await message.answer(f"По вопросам пишите @Noimf")
+#=========================услуги=================================
 
+@dp.callback_query(F.data == "service")
+async def send_service_info(callback: CallbackQuery, state: FSMContext) -> None:
+    await state.set_state(PayService.service_name)
+    await delete_keyboard(callback.from_user.id)
+    kb_builder = InlineKeyboardBuilder()
+    services = ManageServices().get_services()
+    for service in services:
+        services_data.append(service.name)
+        kb_builder.add(InlineKeyboardButton(text=service.name, callback_data=service.name))
+    kb_builder.row(InlineKeyboardButton(text="Назад", callback_data="отмена"))
+    kb = kb_builder.as_markup(resize_keyboard=True)
+    await bot.send_message(callback.from_user.id, f"Выберите услуги", reply_markup=kb)
+
+@dp.callback_query(F.data.in_(services_data))
+async def send_service_pay(callback: CallbackQuery, state: FSMContext) -> None:
+    await state.update_data({"service_name": callback.data})
+    service = ManageServices().get_service_by_name(callback.data)
+    await bot.send_message(callback.from_user.id, f"Подтвердите оплату услуги: {service.name}\n Сумма: {service.price}", reply_markup=service_pay_kb)
+
+@dp.callback_query(F.data == "yes_service")
+async def send_service_yes(callback: CallbackQuery, state: FSMContext) -> None:
+    admin = ManageAdmins().get_admins()
+    services_data = await state.get_data()
+    service = ManageServices().get_service_by_name(services_data.get("service_name")) 
+    user_data = ManageUsers().get_user_by_id(callback.from_user.id)
+    if int(user_data.balance) >= int(service.price):
+        ManageUsers().change_balance(user_data.user_id, -(int(service.price)))
+        ManageUsers().change_deals(user_data.user_id, 1)
+        ManageUsers().change_bonus(user_data.user_id, 1)
+        await bot.send_message(callback.from_user.id, f"Оплата прошла успешно, скоро администратор отправит вам данные покупки.\nЗадержка может занять до 15 минут")
+        for admin in admin:
+            await bot.send_message(admin.user_id, f"Пользователь @{user_data.username} оплатил покупку\nУслуга: {service.name}\nЦена: {service.price}\nБаланс: {user_data.balance}\nПрофиль стим: {user_data.steam_link}", reply_markup=start_kb, link_preview_options=options_1)
+            await state.clear()
+    else:
+        await bot.send_message(callback.from_user.id, f"У вас недостаточно средств. Введите корректное количество единиц\nВаш баланс: {user_data.balance}")
+    
+
+#=========================товары=================================
+@dp.callback_query(F.data == "market")
+async def send_products_info(callback: Message) -> None:
+    await delete_keyboard(callback.from_user.id)
+    await bot.send_message(callback.from_user.id, f"Выберите категорию", reply_markup=product_kb)
 
 @dp.callback_query(F.data == "TF2")
 async def send_TF2_info(callback: CallbackQuery, state: FSMContext) -> None:
+    await delete_keyboard(callback.from_user.id)
     proucts = ManageProducts().get_products()
     await state.set_state(Pay.product_name)
     kb_builder = InlineKeyboardBuilder()
@@ -167,11 +200,13 @@ async def send_TF2_info(callback: CallbackQuery, state: FSMContext) -> None:
         if product.group == "TF2":
             market_TF2.append(product.name)
             kb_builder.add(InlineKeyboardButton(text=product.name, callback_data=product.name))
+    kb_builder.row(InlineKeyboardButton(text="Назад", callback_data="отмена"))
     kb = kb_builder.as_markup(resize_keyboard=True)
-    await bot.send_message(callback.from_user.id, f"Выберите товар", reply_markup=kb)
+    await bot.send_message(callback.from_user.id, f"Выберите товар", reply_markup=kb, )
 
 @dp.callback_query(F.data == "CS2")
 async def send_CS2_info(callback: CallbackQuery, state: FSMContext) -> None:
+    await delete_keyboard(callback.from_user.id)
     products = ManageProducts().get_products()
     await state.set_state(Pay.product_name)
     kb_builder = InlineKeyboardBuilder()
@@ -179,6 +214,7 @@ async def send_CS2_info(callback: CallbackQuery, state: FSMContext) -> None:
         if product.group == "CS2":
             market_CS2.append(product.name)
             kb_builder.add(InlineKeyboardButton(text=product.name, callback_data=product.name))
+    kb_builder.row(InlineKeyboardButton(text="Назад", callback_data="отмена"))
     kb = kb_builder.as_markup(resize_keyboard=True)
     await bot.send_message(callback.from_user.id, f"Выберите товар", reply_markup=kb)
 
@@ -231,5 +267,8 @@ async def send_pay_info(callback: CallbackQuery, state: FSMContext) -> None:
         await bot.send_message(callback.from_user.id, f"У вас недостаточно средств. Введите корректное количество единиц\nВаш баланс: {user_data.balance}")
 
 
+async def delete_keyboard(from_user, ) -> None:
+    call = await bot.send_message(from_user, "Получение данных", reply_markup=ReplyKeyboardRemove())
+    await bot.delete_message(from_user, call.message_id)
         
     

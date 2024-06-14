@@ -9,7 +9,7 @@ from aiogram.fsm.context import FSMContext
 from keyboards.menu import *
 from keyboards.state import *
 from keyboards.admin_menu import *
-from db.dataspace import ManageUsers, ManageAdmins, ManageProducts
+from db.dataspace import *
 from db.models import Users, Product
 
 
@@ -52,7 +52,7 @@ async def add_product_name(message: Message, state: FSMContext) -> None:
 
 @dp.message(AddProduct.add_product_group)
 async def add_product_group(message: Message, state: FSMContext) -> None:
-    await state.update_data({"add_product_group": message.text})
+    await state.update_data(В)
     await message.answer(f"Вввведите цену")
     await state.set_state(AddProduct.add_product_price)
 
@@ -137,11 +137,76 @@ async def change_quantity(message: Message, state: FSMContext) -> None:
     await message.answer(f"Количество изменено")
     await state.clear()
     
-      
+#=========================================Услуги=========================================
+@dp.message((F.text.lower() == "редактировать услуги"))
+async def send_services(message: Message) -> None:
+    services = ManageServices().get_services()
+    for service in services:
+        await message.answer(f"Название: {service.name}\nЦена: {service.price}\n",reply_markup=service_menu_kb)
+
+@dp.message((F.text.lower() == "добавить услугу"))
+@admins_only
+async def add_service(message: Message, state: FSMContext) -> None:
+    await state.set_state(AddService.add_service_name)
+    await message.answer(f"Вввведите название")
+
+@dp.message(AddService.add_service_name)
+async def add_service_name(message: Message, state: FSMContext) -> None:
+    await state.update_data({"add_service_name": message.text})
+    await message.answer(f"Вввведите цену")
+    await state.set_state(AddService.add_service_price)
+
+@dp.message(AddService.add_service_price)
+async def add_service_price(message: Message, state: FSMContext) -> None:
+    await state.update_data({"add_service_price": message.text})
+    service_data = await state.get_data()
+    service = Service(
+        name=service_data.get("add_service_name"),
+        price=service_data.get("add_service_price"),
+    )
+    ManageServices().add_service(service)
+    await message.answer(f"Услуга добавлена")
+    await state.clear()
+
+@dp.message(F.text.lower() == "удалить услугу")
+@admins_only
+async def delete_service(message: Message, state: FSMContext) -> None:
+    await state.set_state(DeleteService.delete_service_name)
+    await message.answer(f"Вввведите название услуги")
+
+@dp.message(DeleteService.delete_service_name)
+async def delete_service_name(message: Message, state: FSMContext) -> None:
+    await state.update_data({"service_name": message.text})
+    service = await state.get_data()
+    ManageServices().delete_service(service.get("service_name"))
+    await message.answer(f"Услуга удалена")
+    await state.clear()
+
+@dp.message(F.text.lower() == "изменить цену услуги")
+@admins_only
+async def change_price(message: Message, state: FSMContext) -> None:
+    await state.set_state(ChangeServicePrice.change_service_name)
+    await message.answer(f"Вввведите название услуги")
+
+@dp.message(ChangeServicePrice.change_service_name)
+async def change_price_name(message: Message, state: FSMContext) -> None:
+    await state.update_data({"service_name": message.text})
+    await message.answer(f"Вввведите цену")
+    await state.set_state(ChangeServicePrice.change_service_price)
+
+@dp.message(ChangeServicePrice.change_service_price)
+async def change_price(message: Message, state: FSMContext) -> None:
+    await state.update_data({"service_price": message.text})
+    service = await state.get_data()
+    ManageServices().change_price(service.get("service_name"), service.get("service_price"))
+    await message.answer(f"Цена изменена")
+    await state.clear()
+
 @dp.message(F.text.lower() == "назад")
 @admins_only
-async def send_admin_menu(message: Message) -> None:
+async def send_admin_menu(message: Message, state: FSMContext) -> None:
     await message.answer(f"Меню администратора", reply_markup=admin_kb)
+    await state.clear()
 
 @dp.message(F.text.lower() == "меню пользователя")
 @admins_only 

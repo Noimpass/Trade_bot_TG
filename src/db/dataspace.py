@@ -161,3 +161,49 @@ class ManageProducts:
         except Exception as e:
             logging.error("Can't sell product", e)
         
+
+class ManageServices:
+    def get_services(self):
+        try:
+            services = session.query(Service).all()
+            return services
+        except NoResultFound:
+            return None
+        
+    def get_service_by_id(self, service_id: int):
+        try:
+            service = session.query(Service).filter(Service.id == service_id).one()
+            return service
+        except NoResultFound:
+            return None
+        
+    def get_service_by_name(self, service_name: str):
+        try:
+            service = session.query(Service).filter(Service.name == service_name).one()
+            return service
+        except NoResultFound:
+            return None
+        
+    def add_service(self, service:Service):
+        try:
+            session.add(service)
+            session.commit()
+        except Exception as e:
+            logging.error("Can't add service", e)
+
+    def delete_service(self, service_name: str):
+        try:
+            service = session.query(Service).filter(Service.name == service_name).one()
+            session.delete(service)
+            session.commit()
+        except Exception as e:
+            logging.error("Can't delete service", e)
+
+    def change_price(self, service_name: str, price: int):
+        try:
+            service = session.query(Service).filter(Service.name == service_name).one()
+            service.price = price
+            session.commit()
+        except Exception as e:
+            logging.error("Can't change price", e)
+

@@ -28,3 +28,9 @@ class Product(Base):
     price = Column(Integer)
     quantity = Column(Integer)
     link = Column(String)
+
+class Service(Base):
+    __tablename__ = "servise"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    price = Column(Integer)

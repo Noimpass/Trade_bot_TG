@@ -2,6 +2,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardBut
 
 kb = [  
     [KeyboardButton(text="Редактировать товары")],
+    [KeyboardButton(text="Редактировать услуги")],
     [KeyboardButton(text="Меню пользователя")]
 ]
 
@@ -16,4 +17,13 @@ kb = [
 ]
 
 product_menu_kb = ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
+
+kb = [
+    [KeyboardButton(text="Добавить услугу"),
+    KeyboardButton(text="Удалить услугу")],
+    [KeyboardButton(text="Изменить цену услуги"),
+    KeyboardButton(text="Назад")]
+]
+
+service_menu_kb = ReplyKeyboardMarkup(keyboard=kb, resize_keyboard=True)
 
